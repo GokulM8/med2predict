@@ -57,6 +57,13 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        risk: {
+          high: "hsl(var(--risk-high))",
+          medium: "hsl(var(--risk-medium))",
+          low: "hsl(var(--risk-low))",
+          positive: "hsl(var(--risk-positive))",
+          negative: "hsl(var(--risk-negative))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
