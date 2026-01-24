@@ -4,8 +4,8 @@ export function Header() {
   return (
     <header className="h-16 border-b border-border bg-card px-6 flex items-center justify-between">
       <div>
-        <h1 className="text-xl font-semibold">Patient Risk Assessment</h1>
-        <p className="text-sm text-muted-foreground">Cardiovascular Disease Prediction Model</p>
+        <h1 className="text-xl font-semibold">Intelligent Heart Risk Dashboard</h1>
+        <p className="text-sm text-muted-foreground">Clinical decision support for cardiovascular risk</p>
       </div>
       
       <div className="flex items-center gap-3">

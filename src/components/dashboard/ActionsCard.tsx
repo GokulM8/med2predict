@@ -175,21 +175,21 @@ Your Healthcare Team
   };
 
   return (
-    <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
+    <Card className="border bg-card">
       <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-lg text-primary-foreground">
-          <FileText className="w-5 h-5" />
-          Actions & Reports
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <FileText className="w-5 h-5 text-primary" />
+          Care Actions & Reports
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm text-primary-foreground/80">
-          Generate a comprehensive PDF report including SHAP visualizations and clinical recommendations.
+        <p className="text-sm text-muted-foreground">
+          Export a clear summary with top contributors and clinical recommendations for the care team or patient.
         </p>
 
         <Button 
-          variant="secondary" 
-          className="w-full bg-background text-foreground hover:bg-background/90"
+          variant="default" 
+          className="w-full"
           onClick={handleDownloadReport}
         >
           <Download className="w-4 h-4 mr-2" />
@@ -198,7 +198,7 @@ Your Healthcare Team
 
         <Button 
           variant="outline" 
-          className="w-full border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"
+          className="w-full"
           onClick={handleShareWithPatient}
         >
           <Mail className="w-4 h-4 mr-2" />

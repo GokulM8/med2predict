@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, FileText, Settings, Activity } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Settings, HeartPulse } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SidebarProps {
@@ -19,10 +19,13 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
       {/* Logo */}
       <div className="p-6 border-b border-border">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-            <Activity className="w-5 h-5 text-primary-foreground" />
+          <div className="w-10 h-10 rounded-xl bg-primary/90 flex items-center justify-center">
+            <HeartPulse className="w-5 h-5 text-primary-foreground" />
           </div>
-          <span className="text-xl font-bold text-primary">MedPredict</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xl font-bold text-foreground">Med2Predict</span>
+            <HeartPulse className="w-5 h-5 text-primary" />
+          </div>
         </div>
       </div>
 
@@ -59,7 +62,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             <span className="text-sm font-medium">Model Status</span>
           </div>
-          <p className="text-xs text-muted-foreground">Running v2.4 (XGBoost)</p>
+          <p className="text-xs text-muted-foreground">Model v2.4 · Live</p>
         </div>
       </div>
     </aside>
