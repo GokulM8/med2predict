@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -6,16 +6,23 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Calculator } from 'lucide-react';
+import { FileText, Calculator, Upload, CheckCircle } from 'lucide-react';
 import { PatientData, generatePatientId } from '@/lib/riskCalculator';
+import { useToast } from '@/hooks/use-toast';
 
 interface PatientDataFormProps {
   onCalculate: (data: PatientData) => void;
   isCalculating: boolean;
+  initialData?: PatientData;
 }
 
-export function PatientDataForm({ onCalculate, isCalculating }: PatientDataFormProps) {
-  const [formData, setFormData] = useState<PatientData>({
+export function PatientDataForm({ onCalculate, isCalculating, initialData }: PatientDataFormProps) {
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [csvData, setCsvData] = useState<PatientData[]>([]);
+  const [selectedCsvIndex, setSelectedCsvIndex] = useState<number>(0);
+  
+  const [formData, setFormData] = useState<PatientData>(initialData || {
     patientId: generatePatientId(),
     age: 62,
     sex: 'Male',
@@ -30,6 +37,12 @@ export function PatientDataForm({ onCalculate, isCalculating }: PatientDataFormP
     stSlope: 'flat',
   });
 
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData);
+    }
+  }, [initialData]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onCalculate(formData);
@@ -37,6 +50,88 @@ export function PatientDataForm({ onCalculate, isCalculating }: PatientDataFormP
 
   const updateField = <K extends keyof PatientData>(field: K, value: PatientData[K]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const parseCSV = (text: string): PatientData[] => {
+    const lines = text.trim().split('\n');
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+    
+    const patients: PatientData[] = [];
+    
+    for (let i = 1; i < Math.min(lines.length, 11); i++) { // Limit to 10 patients
+      const values = lines[i].split(',');
+      
+      const getVal = (key: string) => {
+        const idx = headers.indexOf(key);
+        return idx >= 0 ? values[idx]?.trim() : '';
+      };
+      
+      const chestPainMap: Record<string, PatientData['chestPainType']> = {
+        'typical angina': 'typical angina',
+        'atypical angina': 'atypical angina',
+        'non-anginal': 'non-anginal',
+        'asymptomatic': 'asymptomatic',
+      };
+      
+      const slopeMap: Record<string, PatientData['stSlope']> = {
+        'upsloping': 'upsloping',
+        'flat': 'flat',
+        'downsloping': 'downsloping',
+      };
+
+      const patient: PatientData = {
+        patientId: getVal('id') ? `PT-CSV-${getVal('id')}` : generatePatientId(),
+        age: parseInt(getVal('age')) || 50,
+        sex: getVal('sex') === 'Female' ? 'Female' : 'Male',
+        chestPainType: chestPainMap[getVal('cp')] || 'non-anginal',
+        restingBP: parseInt(getVal('trestbps')) || 120,
+        cholesterol: parseInt(getVal('chol')) || 200,
+        fastingBloodSugar: getVal('fbs') === 'TRUE' || getVal('fbs') === '1',
+        restingECG: getVal('restecg') === 'lv hypertrophy' ? 'lv hypertrophy' : 'normal',
+        maxHeartRate: parseInt(getVal('thalch')) || 150,
+        exerciseAngina: getVal('exang') === 'TRUE' || getVal('exang') === '1',
+        stDepression: parseFloat(getVal('oldpeak')) || 0,
+        stSlope: slopeMap[getVal('slope')] || 'flat',
+      };
+      
+      patients.push(patient);
+    }
+    
+    return patients;
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      const patients = parseCSV(text);
+      
+      if (patients.length > 0) {
+        setCsvData(patients);
+        setSelectedCsvIndex(0);
+        setFormData(patients[0]);
+        toast({
+          title: "CSV Loaded Successfully",
+          description: `Loaded ${patients.length} patient records from the file.`,
+        });
+      } else {
+        toast({
+          title: "CSV Parse Error",
+          description: "Could not parse any patient records from the file.",
+          variant: "destructive",
+        });
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleSelectCsvPatient = (index: number) => {
+    setSelectedCsvIndex(index);
+    setFormData(csvData[index]);
+    onCalculate(csvData[index]);
   };
 
   return (
@@ -51,8 +146,59 @@ export function PatientDataForm({ onCalculate, isCalculating }: PatientDataFormP
         <Tabs defaultValue="manual" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="manual">Manual Entry</TabsTrigger>
-            <TabsTrigger value="csv" disabled>Upload CSV</TabsTrigger>
+            <TabsTrigger value="csv">Upload CSV</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="csv">
+            <div className="space-y-4">
+              <div 
+                className="border-2 border-dashed rounded-xl p-8 text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
+                <p className="font-medium">Click to upload CSV file</p>
+                <p className="text-sm text-muted-foreground mt-1">Supports UCI Heart Disease format</p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                />
+              </div>
+              
+              {csvData.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Select Patient from CSV ({csvData.length} loaded)</Label>
+                  <div className="max-h-48 overflow-y-auto space-y-2">
+                    {csvData.map((patient, idx) => (
+                      <div
+                        key={idx}
+                        className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                          selectedCsvIndex === idx 
+                            ? 'border-primary bg-primary/5' 
+                            : 'hover:border-muted-foreground/50'
+                        }`}
+                        onClick={() => handleSelectCsvPatient(idx)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-sm">{patient.patientId}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {patient.age}y, {patient.sex}, BP: {patient.restingBP}
+                            </p>
+                          </div>
+                          {selectedCsvIndex === idx && (
+                            <CheckCircle className="w-4 h-4 text-primary" />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </TabsContent>
 
           <TabsContent value="manual">
             <form onSubmit={handleSubmit} className="space-y-4">
