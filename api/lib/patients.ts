@@ -1,5 +1,5 @@
 // Patient management functions for PostgreSQL
-import { query } from './db';
+import { query } from './db.js';
 
 export interface PatientRecord {
   patient_id: string;

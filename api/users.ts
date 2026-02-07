@@ -1,7 +1,7 @@
 // Vercel Serverless Function: GET /api/users (Admin only)
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import jwt from 'jsonwebtoken';
-import { listUsers } from './lib/users';
+import { listUsers } from './lib/users.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
 

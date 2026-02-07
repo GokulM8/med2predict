@@ -1,8 +1,8 @@
 // Vercel Serverless Function: GET/POST /api/patients
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import jwt from 'jsonwebtoken';
-import { listPatients, savePatient } from '../lib/patients';
-import { logActivity } from '../lib/activity';
+import { listPatients, savePatient } from '../lib/patients.js';
+import { logActivity } from '../lib/activity.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
 

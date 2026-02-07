@@ -1,8 +1,8 @@
 // Vercel Serverless Function: GET/PUT /api/auth/me
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import jwt from 'jsonwebtoken';
-import { getUserById, updateUserProfile } from '../lib/users';
-import { logActivity } from '../lib/activity';
+import { getUserById, updateUserProfile } from '../lib/users.js';
+import { logActivity } from '../lib/activity.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
 

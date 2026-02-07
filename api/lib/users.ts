@@ -1,6 +1,6 @@
 // User management functions for PostgreSQL
 import bcrypt from 'bcryptjs';
-import { query } from './db';
+import { query } from './db.js';
 
 export interface User {
   id: number;

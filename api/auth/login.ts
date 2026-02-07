@@ -2,9 +2,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { ensureDatabaseInitialized } from '../lib/db';
-import { findUserByEmail, seedAdminUser } from '../lib/users';
-import { logActivity } from '../lib/activity';
+import { ensureDatabaseInitialized } from '../lib/db.js';
+import { findUserByEmail, seedAdminUser } from '../lib/users.js';
+import { logActivity } from '../lib/activity.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
 
