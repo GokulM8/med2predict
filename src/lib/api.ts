@@ -1,6 +1,6 @@
 import { authHeaders } from './auth';
 
-const BASE_URL = (import.meta.env.VITE_API_URL as string) || 'http://localhost:4000';
+const BASE_URL = (import.meta.env.VITE_API_URL as string) || (import.meta.env.PROD ? '/api' : 'http://localhost:4000');
 
 async function handleJson(res: Response) {
   if (res.status === 401) throw new Error('Unauthorized');

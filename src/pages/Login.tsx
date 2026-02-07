@@ -25,7 +25,8 @@ export default function Login() {
       toast({ title: 'Signed in', description: `Welcome back, ${res.user.email}` });
       navigate('/');
     } catch (err) {
-      toast({ title: 'Login failed', description: 'Check credentials and try again.', variant: 'destructive' });
+      const message = err instanceof Error ? err.message : 'Check credentials and try again.';
+      toast({ title: 'Login failed', description: message, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
