@@ -6,11 +6,11 @@ let pool: Pool | null = null;
 
 export function getPool(): Pool {
   if (!pool) {
-    // Use DATABASE_URL (Neon) or POSTGRES_URL (Vercel Postgres)
-    const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-    
+    // Use DATABASE_URL (Neon)
+    const connectionString = process.env.DATABASE_URL;
+
     if (!connectionString) {
-      throw new Error('No database connection string found. Set DATABASE_URL or POSTGRES_URL environment variable.');
+      throw new Error('No database connection string found. Set DATABASE_URL environment variable.');
     }
 
     pool = new Pool({
