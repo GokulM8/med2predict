@@ -1,50 +1,116 @@
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useEffect, useState } from 'react';
+import { Bell, Calendar, Database, FileText, Loader2, MapPin, Phone, RefreshCw, Save, Shield, User } from 'lucide-react';
+import { meApi, updateProfileApi } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Settings, User, Bell, Shield, Database, Save, RefreshCw } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+
+interface UserProfile {
+  id: number;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  age?: number;
+  gender?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  bio?: string;
+  role: string;
+}
 
 export function SettingsPage() {
   const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [profileData, setProfileData] = useState<Partial<UserProfile>>({});
   const [settings, setSettings] = useState({
-    // User Profile
-    doctorName: 'Dr. Sarah Chen',
-    department: 'Cardiology Dept.',
-    email: 'sarah.chen@hospital.org',
-    
-    // Notifications
     emailAlerts: true,
     highRiskAlerts: true,
     weeklyReports: true,
-    
-    // Model Settings
     modelVersion: 'v2.4',
     confidenceThreshold: '0.65',
     autoRecalculate: true,
-    
-    // Data Settings
     dataRetention: '12',
     anonymizeExports: true,
   });
 
-  const handleSave = () => {
-    toast({
-      title: "Settings saved",
-      description: "Your preferences have been updated successfully.",
-    });
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    try {
+      setLoading(true);
+      const data = await meApi();
+      setUser(data);
+      setProfileData(data);
+    } catch (err) {
+      toast({ title: 'Error', description: 'Failed to load profile', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+  const handleProfileChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value, type } = e.target;
+    setProfileData((prev) => ({
+      ...prev,
+      [name]: type === 'number' ? Number(value) || undefined : value,
+    }));
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      const updated = await updateProfileApi(profileData);
+      setUser(updated);
+      setProfileData(updated);
+      toast({
+        title: 'Settings saved',
+        description: 'Your preferences have been updated successfully.',
+      });
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: 'Failed to save settings. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleReset = () => {
-    toast({
-      title: "Settings reset",
-      description: "All settings have been restored to defaults.",
-    });
+    if (user) {
+      setProfileData(user);
+      toast({
+        title: 'Settings reset',
+        description: 'All settings have been restored to saved values.',
+      });
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading settings...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -65,29 +131,133 @@ export function SettingsPage() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="doctorName">Full Name</Label>
+              <Label htmlFor="firstName">First Name</Label>
               <Input
-                id="doctorName"
-                value={settings.doctorName}
-                onChange={(e) => setSettings({ ...settings, doctorName: e.target.value })}
+                id="firstName"
+                name="firstName"
+                placeholder="John"
+                value={profileData.firstName || ''}
+                onChange={handleProfileChange}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="department">Department</Label>
+              <Label htmlFor="lastName">Last Name</Label>
               <Input
-                id="department"
-                value={settings.department}
-                onChange={(e) => setSettings({ ...settings, department: e.target.value })}
+                id="lastName"
+                name="lastName"
+                placeholder="Doe"
+                value={profileData.lastName || ''}
+                onChange={handleProfileChange}
               />
             </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email Address</Label>
+            <Input id="email" type="email" value={user?.email || ''} disabled className="bg-muted" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="phone" className="flex items-center gap-2">
+                <Phone className="w-4 h-4" /> Phone
+              </Label>
+              <Input
+                id="phone"
+                name="phone"
+                type="tel"
+                placeholder="+1 (555) 000-0000"
+                value={profileData.phone || ''}
+                onChange={handleProfileChange}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="age" className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" /> Age
+              </Label>
+              <Input
+                id="age"
+                name="age"
+                type="number"
+                min="1"
+                max="120"
+                placeholder="30"
+                value={profileData.age || ''}
+                onChange={handleProfileChange}
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="gender">Gender</Label>
+            <select
+              id="gender"
+              name="gender"
+              value={profileData.gender || ''}
+              onChange={handleProfileChange}
+              className="w-full h-11 px-3 py-2 rounded-lg border border-primary/20 bg-background/60 hover:border-primary/40 focus:border-primary/70 focus:ring-primary/20 transition-all"
+            >
+              <option value="">Select gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+              <option value="prefer-not-to-say">Prefer not to say</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="address" className="flex items-center gap-2">
+              <MapPin className="w-4 h-4" /> Street Address
+            </Label>
             <Input
-              id="email"
-              type="email"
-              value={settings.email}
-              onChange={(e) => setSettings({ ...settings, email: e.target.value })}
+              id="address"
+              name="address"
+              placeholder="123 Main Street"
+              value={profileData.address || ''}
+              onChange={handleProfileChange}
+            />
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="city">City</Label>
+              <Input
+                id="city"
+                name="city"
+                placeholder="New York"
+                value={profileData.city || ''}
+                onChange={handleProfileChange}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="state">State</Label>
+              <Input
+                id="state"
+                name="state"
+                placeholder="NY"
+                maxLength={2}
+                value={profileData.state || ''}
+                onChange={handleProfileChange}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="zipCode">Zip Code</Label>
+              <Input
+                id="zipCode"
+                name="zipCode"
+                placeholder="10001"
+                value={profileData.zipCode || ''}
+                onChange={handleProfileChange}
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="bio" className="flex items-center gap-2">
+              <FileText className="w-4 h-4" /> Bio
+            </Label>
+            <Textarea
+              id="bio"
+              name="bio"
+              placeholder="Tell us about yourself..."
+              rows={3}
+              value={profileData.bio || ''}
+              onChange={handleProfileChange}
+              className="resize-none"
             />
           </div>
         </CardContent>
@@ -230,13 +400,22 @@ export function SettingsPage() {
 
       {/* Action Buttons */}
       <div className="flex justify-end gap-3">
-        <Button variant="outline" onClick={handleReset}>
+        <Button variant="outline" onClick={handleReset} disabled={saving}>
           <RefreshCw className="w-4 h-4 mr-2" />
-          Reset to Defaults
+          Reset to Saved
         </Button>
-        <Button onClick={handleSave}>
-          <Save className="w-4 h-4 mr-2" />
-          Save Changes
+        <Button onClick={handleSave} disabled={saving}>
+          {saving ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save className="w-4 h-4 mr-2" />
+              Save Changes
+            </>
+          )}
         </Button>
       </div>
     </div>

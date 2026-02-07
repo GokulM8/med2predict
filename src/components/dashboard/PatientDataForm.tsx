@@ -34,6 +34,7 @@ export function PatientDataForm({ onCalculate, isCalculating, initialData }: Pat
   const [warnings, setWarnings] = useState<string[]>([]);
   
   const [formData, setFormData] = useState<PatientData>(initialData || {
+    patientName: 'New Patient',
     patientId: generatePatientId(),
     age: 62,
     sex: 'Male',
@@ -50,7 +51,7 @@ export function PatientDataForm({ onCalculate, isCalculating, initialData }: Pat
 
   useEffect(() => {
     if (initialData) {
-      setFormData(initialData);
+      setFormData({ ...initialData, patientName: initialData.patientName || 'Unnamed Patient' });
       setErrors({});
     }
   }, [initialData]);
@@ -135,16 +136,24 @@ export function PatientDataForm({ onCalculate, isCalculating, initialData }: Pat
       };
       
       const chestPainMap: Record<string, PatientData['chestPainType']> = {
-        'typical angina': 'typical angina',
-        'atypical angina': 'atypical angina',
-        'non-anginal': 'non-anginal',
+        'typical angina': 'typical_angina',
+        'atypical angina': 'atypical_angina',
+        'non-anginal': 'non_anginal_pain',
+        'non-anginal pain': 'non_anginal_pain',
         'asymptomatic': 'asymptomatic',
+        '1': 'typical_angina',
+        '2': 'atypical_angina',
+        '3': 'non_anginal_pain',
+        '4': 'asymptomatic',
       };
       
       const slopeMap: Record<string, PatientData['stSlope']> = {
         'upsloping': 'upsloping',
         'flat': 'flat',
         'downsloping': 'downsloping',
+        '1': 'upsloping',
+        '2': 'flat',
+        '3': 'downsloping',
       };
 
       const age = Math.max(HEALTH_LIMITS.age.min, Math.min(HEALTH_LIMITS.age.max, parseInt(getVal('age')) || 50));
@@ -154,6 +163,7 @@ export function PatientDataForm({ onCalculate, isCalculating, initialData }: Pat
       const stDepression = Math.max(HEALTH_LIMITS.stDepression.min, Math.min(HEALTH_LIMITS.stDepression.max, parseFloat(getVal('oldpeak')) || 0));
 
       const patient: PatientData = {
+        patientName: getVal('name') || getVal('patient') || `CSV Patient ${i}`,
         patientId: getVal('id') ? `PT-CSV-${getVal('id')}` : generatePatientId(),
         age,
         sex: getVal('sex') === 'Female' ? 'Female' : 'Male',
@@ -259,9 +269,9 @@ export function PatientDataForm({ onCalculate, isCalculating, initialData }: Pat
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="font-medium text-sm">{patient.patientId}</p>
+                            <p className="font-medium text-sm">{patient.patientName || patient.patientId}</p>
                             <p className="text-xs text-muted-foreground">
-                              {patient.age}y, {patient.sex}, BP: {patient.restingBP}
+                              {patient.patientId} · {patient.age}y, {patient.sex}, BP: {patient.restingBP}
                             </p>
                           </div>
                           {selectedCsvIndex === idx && (
@@ -291,6 +301,20 @@ export function PatientDataForm({ onCalculate, isCalculating, initialData }: Pat
                   </AlertDescription>
                 </Alert>
               )}
+
+              {/* Patient Name */}
+              <div className="space-y-2">
+                <Label htmlFor="patientName">Patient Name</Label>
+                <Input
+                  id="patientName"
+                  value={formData.patientName || ''}
+                  onChange={(e) => updateField('patientName', e.target.value)}
+                  className={getInputClassName('patientName')}
+                  maxLength={100}
+                  placeholder="Jane Doe"
+                />
+                {errors.patientName && <p className="text-xs text-destructive">{errors.patientName}</p>}
+              </div>
 
               {/* Patient ID */}
               <div className="space-y-2">
@@ -324,13 +348,13 @@ export function PatientDataForm({ onCalculate, isCalculating, initialData }: Pat
                 </div>
                 <div className="space-y-2">
                   <Label>Gender</Label>
-                  <Select value={formData.sex} onValueChange={(v) => updateField('sex', v as 'Male' | 'Female')}>
+                  <Select value={formData.sex} onValueChange={(v) => updateField('sex', v as PatientData['sex'])}>
                     <SelectTrigger className={getInputClassName('sex')}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Male">Male</SelectItem>
-                      <SelectItem value="Female">Female</SelectItem>
+                      <SelectItem value="M">Male</SelectItem>
+                      <SelectItem value="F">Female</SelectItem>
                     </SelectContent>
                   </Select>
                   {errors.sex && <p className="text-xs text-destructive">{errors.sex}</p>}
@@ -414,9 +438,9 @@ export function PatientDataForm({ onCalculate, isCalculating, initialData }: Pat
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="typical angina">Typical Angina</SelectItem>
-                    <SelectItem value="atypical angina">Atypical Angina</SelectItem>
-                    <SelectItem value="non-anginal">Non-Anginal Pain</SelectItem>
+                    <SelectItem value="typical_angina">Typical Angina</SelectItem>
+                    <SelectItem value="atypical_angina">Atypical Angina</SelectItem>
+                    <SelectItem value="non_anginal_pain">Non-Anginal Pain</SelectItem>
                     <SelectItem value="asymptomatic">Asymptomatic</SelectItem>
                   </SelectContent>
                 </Select>

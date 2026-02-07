@@ -9,7 +9,8 @@ import { ActionsCard } from '@/components/dashboard/ActionsCard';
 import { PatientsPage } from '@/components/dashboard/PatientsPage';
 import { ReportsPage } from '@/components/dashboard/ReportsPage';
 import { SettingsPage } from '@/components/dashboard/SettingsPage';
-import { PatientData, RiskResult, calculateRisk } from '@/lib/riskCalculator';
+import { PatientData, RiskResult, calculateRiskML } from '@/lib/riskCalculator';
+import { savePatientApi } from '@/lib/api';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -20,37 +21,63 @@ const Index = () => {
   // Calculate initial risk on mount
   useEffect(() => {
     const defaultPatient: PatientData = {
+      patientName: 'Default Patient',
       patientId: 'PT-2024-8921',
       age: 62,
-      sex: 'Male',
+      sex: 'M',
       chestPainType: 'asymptomatic',
       restingBP: 145,
       cholesterol: 240,
       fastingBloodSugar: false,
-      restingECG: 'lv hypertrophy',
+      restingECG: 'lvh',
       maxHeartRate: 150,
       exerciseAngina: true,
       stDepression: 2.3,
       stSlope: 'flat',
+      ca: 0,
+      thal: 'normal',
     };
     setCurrentPatient(defaultPatient);
-    setRiskResult(calculateRisk(defaultPatient));
+    
+    // Run ML model immediately for initial view
+    setIsCalculating(true);
+    calculateRiskML(defaultPatient)
+      .then((mlResult) => {
+        setRiskResult(mlResult);
+        console.log('✅ ML model loaded and initial prediction set');
+      })
+      .catch((err) => {
+        console.error('ML model failed to calculate initial risk:', err);
+      })
+      .finally(() => setIsCalculating(false));
   }, []);
 
-  const handleCalculate = (data: PatientData) => {
+  const handleCalculate = async (data: PatientData) => {
     setIsCalculating(true);
     setCurrentPatient(data);
-    // Simulate calculation delay for UX
-    setTimeout(() => {
-      const result = calculateRisk(data);
+    
+    try {
+      const result = await calculateRiskML(data);
       setRiskResult(result);
+      // Persist assessment via backend API
+      await savePatientApi({ patientId: data.patientId, data, result });
+    } catch (error) {
+      console.error('ML prediction failed:', error);
+    } finally {
       setIsCalculating(false);
-    }, 600);
+    }
   };
 
-  const handleSelectPatient = (patient: PatientData) => {
+  const handleSelectPatient = async (patient: PatientData) => {
     setCurrentPatient(patient);
-    setRiskResult(calculateRisk(patient));
+    try {
+      const result = await calculateRiskML(patient);
+      setRiskResult(result);
+      // Persist assessment for selected patient (refresh/ensure latest)
+      await savePatientApi({ patientId: patient.patientId, data: patient, result });
+    } catch (error) {
+      console.error('ML prediction failed for selected patient:', error);
+    }
     setActiveTab('dashboard');
   };
 

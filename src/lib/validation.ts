@@ -16,6 +16,11 @@ export const patientDataSchema = z.object({
     .max(50, 'Patient ID must be less than 50 characters')
     .regex(/^[a-zA-Z0-9\-_]+$/, 'Patient ID can only contain letters, numbers, hyphens, and underscores'),
 
+  patientName: z.string()
+    .trim()
+    .min(1, 'Patient name is required')
+    .max(100, 'Patient name must be less than 100 characters'),
+
   age: z.number({
     required_error: 'Age is required',
     invalid_type_error: 'Age must be a number',
@@ -24,11 +29,11 @@ export const patientDataSchema = z.object({
     .min(HEALTH_LIMITS.age.min, `Age must be at least ${HEALTH_LIMITS.age.min} year`)
     .max(HEALTH_LIMITS.age.max, `Age cannot exceed ${HEALTH_LIMITS.age.max} years`),
 
-  sex: z.enum(['Male', 'Female'], {
+  sex: z.enum(['Male', 'Female', 'M', 'F'], {
     required_error: 'Gender is required',
   }),
 
-  chestPainType: z.enum(['typical angina', 'atypical angina', 'non-anginal', 'asymptomatic'], {
+  chestPainType: z.enum(['typical_angina', 'atypical_angina', 'non_anginal_pain', 'asymptomatic'], {
     required_error: 'Chest pain type is required',
   }),
 
@@ -50,7 +55,7 @@ export const patientDataSchema = z.object({
 
   fastingBloodSugar: z.boolean(),
 
-  restingECG: z.enum(['normal', 'lv hypertrophy', 'st-t abnormality'], {
+  restingECG: z.enum(['normal', 'lvh', 'st_t_abnormality', 'lv hypertrophy', 'st-t abnormality'], {
     required_error: 'Resting ECG is required',
   }),
 
@@ -74,6 +79,9 @@ export const patientDataSchema = z.object({
   stSlope: z.enum(['upsloping', 'flat', 'downsloping'], {
     required_error: 'ST slope is required',
   }),
+
+  ca: z.number().optional(),
+  thal: z.enum(['normal', 'fixed_defect', 'reversible_defect']).optional(),
 });
 
 export type ValidatedPatientData = z.infer<typeof patientDataSchema>;

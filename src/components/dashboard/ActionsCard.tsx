@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Download, Share2, FileText, Mail } from 'lucide-react';
 import { RiskResult, PatientData } from '@/lib/riskCalculator';
+import { savePatientApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
 interface ActionsCardProps {
@@ -11,6 +12,22 @@ interface ActionsCardProps {
 
 export function ActionsCard({ result, patient }: ActionsCardProps) {
   const { toast } = useToast();
+
+  const handleSaveAssessment = async () => {
+    if (!result || !patient) {
+      toast({
+        title: "No data available",
+        description: "Please calculate a risk assessment first.",
+        variant: "destructive",
+      });
+      return;
+    }
+    await savePatientApi({ patientId: patient.patientId, data: patient, result });
+    toast({
+      title: "Assessment Saved",
+      description: `Record ${patient.patientId} persisted successfully.`,
+    });
+  };
 
   const handleDownloadReport = () => {
     if (!result || !patient) {
@@ -186,6 +203,15 @@ Your Healthcare Team
         <p className="text-sm text-muted-foreground">
           Export a clear summary with top contributors and clinical recommendations for the care team or patient.
         </p>
+
+        <Button 
+          variant="secondary" 
+          className="w-full"
+          onClick={handleSaveAssessment}
+        >
+          <Share2 className="w-4 h-4 mr-2" />
+          Save Assessment
+        </Button>
 
         <Button 
           variant="default" 
