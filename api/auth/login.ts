@@ -2,7 +2,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { findUserByEmail } from '../lib/users';
+import { ensureDatabaseInitialized } from '../lib/db';
+import { findUserByEmail, seedAdminUser } from '../lib/users';
 import { logActivity } from '../lib/activity';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
@@ -20,6 +21,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    await ensureDatabaseInitialized();
+    await seedAdminUser();
     console.info('[auth:login] attempt', { email });
     
     const user = await findUserByEmail(email);
@@ -51,7 +54,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       user: { id: user.id, email: user.email, role: user.role }
     });
   } catch (error) {
-    console.error('[auth:login] error:', error);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('[auth:login] error:', { email, message });
     return res.status(500).json({ error: 'Internal server error' });
   }
 }

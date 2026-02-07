@@ -3,6 +3,7 @@ import { Pool } from '@vercel/postgres';
 
 // Create connection pool - Supports both Neon and Vercel Postgres
 let pool: Pool | null = null;
+let initialized = false;
 
 export function getPool(): Pool {
   if (!pool) {
@@ -80,4 +81,10 @@ export async function initDatabase() {
     CREATE INDEX IF NOT EXISTS idx_activity_created_at ON activity(created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
   `);
+}
+
+export async function ensureDatabaseInitialized() {
+  if (initialized) return;
+  await initDatabase();
+  initialized = true;
 }

@@ -1,9 +1,10 @@
 // Vercel Serverless Function: GET /api/healthz
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { query } from './lib/db';
+import { ensureDatabaseInitialized, query } from './lib/db';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
+    await ensureDatabaseInitialized();
     const result = await query('SELECT COUNT(*) as count FROM patients');
     const count = result.rows[0]?.count || 0;
     
