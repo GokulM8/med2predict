@@ -6,6 +6,7 @@
   "description": "Intelligent Heart Disease Risk Prediction System",
   "scripts": {
     "dev": "vite",
+    "dev:all": "concurrently \"npm:server\" \"npm:dev\" --names \"BACKEND,FRONTEND\" --prefix-colors \"cyan,magenta\"",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
@@ -13,8 +14,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "server": "node server/index.js",
-    "start": "node server/index.js",
-    "migrate": "tsx scripts/migrate-to-postgres.ts"
+    "start": "node server/index.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -90,6 +90,7 @@
     "@vitejs/plugin-react": "^5.1.2",
     "@vitejs/plugin-react-swc": "^3.11.0",
     "autoprefixer": "^10.4.21",
+    "concurrently": "^9.2.1",
     "dotenv": "^16.6.1",
     "eslint": "^9.32.0",
     "eslint-plugin-react-hooks": "^5.2.0",

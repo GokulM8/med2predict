@@ -1,0 +1,19 @@
+{
+  "name": "safepulse-healthcare",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Intelligent Heart Disease Risk Prediction System",
+  "scripts": {
+    "dev": "vite",
+    "dev:all": "concurrently \"npm:server\" \"npm:dev\" --names \"BACKEND,FRONTEND\" --prefix-colors \"cyan,magenta\"",
+    "build": "vite build",
+    "build:dev": "vite build --mode development",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "server": "node server/index.js",
+    "start": "node server/index.js"
+  }
+}
